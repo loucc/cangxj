@@ -1,0 +1,22 @@
+# 开发环境配置 (spring.profiles.active=dev)
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cxj?currentSchema=public&stringtype=unspecified
+    username: postgres
+    password: postgres
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+
+app:
+  security:
+    jwt:
+      # 开发环境固定 Secret，仅用于本地调试，生产环境绝不可用
+      secret: "dev-only-secret-do-not-use-in-production-please-replace-me-with-a-real-secret-key"
+  cors:
+    # 开发环境允许所有来源
+    allowed-origins:
+      - "*"

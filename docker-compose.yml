@@ -1,0 +1,96 @@
+name: cxj
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: cxj-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cxj}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      TZ: Asia/Shanghai
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-cxj}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - cxj-net
+
+  redis:
+    image: redis:8.6.3-alpine
+    container_name: cxj-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      ${REDIS_PASSWORD:+--requirepass $REDIS_PASSWORD}
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a $REDIS_PASSWORD} ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - cxj-net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cxj:${APP_VERSION:-latest}
+    container_name: cxj-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      # 数据源
+      DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-cxj}?currentSchema=public&stringtype=unspecified
+      DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DATABASE: 0
+      # 安全
+      JWT_SECRET: ${JWT_SECRET:-ZmFrZS1zZWNyZXQtcGxlYXNlLXJlcGxhY2UtaW4tcHJvZHVjdGlvbi1lbnY=}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-7200}
+      # CORS
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      # JVM
+      JAVA_OPTS: "-XX:+UseZGC -XX:MaxRAMPercentage=75.0 -Duser.timezone=Asia/Shanghai"
+      TZ: Asia/Shanghai
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - app-logs:/app/logs
+    networks:
+      - cxj-net
+
+volumes:
+  postgres-data:
+  redis-data:
+  app-logs:
+
+networks:
+  cxj-net:
+    driver: bridge

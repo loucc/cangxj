@@ -3,6 +3,7 @@ package com.cxj.user.service;
 import com.cxj.common.enums.ResultCode;
 import com.cxj.common.exception.BusinessException;
 import com.cxj.user.controller.dto.UserUpdateDTO;
+import com.cxj.user.converter.UserConverter;
 import com.cxj.user.mapper.UserMapper;
 import com.cxj.user.entity.User;
 import com.cxj.user.controller.vo.UserVO;
@@ -28,6 +29,9 @@ class UserServiceImplTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private UserConverter userConverter;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -55,6 +59,9 @@ class UserServiceImplTest {
     @Test
     void getVO_shouldReturnUserVO_whenUserExists() {
         when(userMapper.selectById(1L)).thenReturn(existingUser);
+        UserVO expected = new UserVO(1L, "alice", "Alice", "alice@example.com",
+                "13800138000", "ACTIVE", null, null);
+        when(userConverter.toVO(existingUser)).thenReturn(expected);
 
         UserVO result = userService.getVO(1L);
 
@@ -63,6 +70,7 @@ class UserServiceImplTest {
         assertEquals("Alice", result.nickname());
         assertEquals("ACTIVE", result.status());
         verify(userMapper).selectById(1L);
+        verify(userConverter).toVO(existingUser);
     }
 
     @Test
@@ -80,11 +88,23 @@ class UserServiceImplTest {
         when(userMapper.selectById(1L)).thenReturn(existingUser);
         when(userMapper.updateById(any(User.class))).thenReturn(1);
 
+        // 模拟 converter 对 entity 的部分更新
+        doAnswer(inv -> {
+            existingUser.setNickname("NewNick");
+            existingUser.setEmail("new@example.com");
+            return null;
+        }).when(userConverter).updateFromDTO(dto, existingUser);
+
+        UserVO expected = new UserVO(1L, "alice", "NewNick", "new@example.com",
+                "13800138000", "ACTIVE", null, null);
+        when(userConverter.toVO(existingUser)).thenReturn(expected);
+
         UserVO result = userService.update(1L, dto);
 
         assertNotNull(result);
         assertEquals("NewNick", result.nickname());
         assertEquals("new@example.com", result.email());
+        verify(userConverter).updateFromDTO(dto, existingUser);
         verify(userMapper).updateById(any(User.class));
     }
 

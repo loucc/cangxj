@@ -1,15 +1,15 @@
 # 开发环境配置 (spring.profiles.active=dev)
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/cxj?currentSchema=public&stringtype=unspecified
+    url: jdbc:postgresql://localhost:5432/ry-vue?currentSchema=public&stringtype=unspecified
     username: postgres
-    password: postgres
+    password: root
 
   data:
     redis:
       host: localhost
       port: 6379
-      password:
+      password: ruoyi123
 
 app:
   security:

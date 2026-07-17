@@ -6,6 +6,8 @@ import com.cxj.common.security.JwtTokenProvider;
 import com.cxj.auth.controller.dto.LoginDTO;
 import com.cxj.user.entity.User;
 import com.cxj.auth.controller.vo.LoginVO;
+import com.cxj.user.controller.vo.UserVO;
+import com.cxj.user.converter.UserConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +36,9 @@ class AuthServiceTest {
     @Mock
     private JwtTokenProvider tokenProvider;
 
+    @Mock
+    private UserConverter userConverter;
+
     @InjectMocks
     private AuthService authService;
 
@@ -59,6 +64,10 @@ class AuthServiceTest {
         when(passwordEncoder.matches("correct-password", "$2a$10$encoded-password")).thenReturn(true);
         when(tokenProvider.generate(eq("alice"), anyMap())).thenReturn("mock-jwt-token");
         when(tokenProvider.expirationSeconds()).thenReturn(7200L);
+
+        UserVO userVO = new UserVO(1L, "alice", "Alice", "alice@example.com",
+                "13800138000", "ACTIVE", null, null);
+        when(userConverter.toVO(activeUser)).thenReturn(userVO);
 
         LoginVO result = authService.login(dto);
 

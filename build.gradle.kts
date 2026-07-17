@@ -65,6 +65,11 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
+    // MapStruct（注解处理器必须在 Lombok 之后、binding 在两者之间）
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
+    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
+
     // Configuration Processor
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
@@ -72,6 +77,12 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.security:spring-security-test")
+
+    // Code Generator（编译时可用，bootJar 排除不进入生产包）
+    compileOnly("com.baomidou:mybatis-plus-generator:3.5.17")
+    compileOnly("org.freemarker:freemarker:2.3.34")
+    testImplementation("com.baomidou:mybatis-plus-generator:3.5.17")
+    testImplementation("org.freemarker:freemarker:2.3.34")
 }
 
 tasks.withType<JavaCompile> {
@@ -84,4 +95,7 @@ tasks.withType<Test> {
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     archiveFileName.set("cxj.jar")
+    // 排除代码生成器，不进入生产包
+    exclude("com/cxj/generator/**")
+    exclude("generator/**")
 }

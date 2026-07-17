@@ -10,6 +10,7 @@ import com.cxj.user.controller.dto.UserCreateDTO;
 import com.cxj.user.controller.dto.UserQueryDTO;
 import com.cxj.user.controller.dto.UserUpdateDTO;
 import com.cxj.user.controller.vo.UserVO;
+import com.cxj.user.converter.UserConverter;
 import com.cxj.user.entity.User;
 import com.cxj.user.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import org.springframework.util.StringUtils;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final PasswordEncoder passwordEncoder;
+    private final UserConverter userConverter;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -34,16 +36,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (lambdaQuery().eq(User::getUsername, dto.username()).exists()) {
             throw new BusinessException(ResultCode.CONFLICT, "用户名已存在");
         }
-        User user = User.builder()
-                .username(dto.username())
-                .password(passwordEncoder.encode(dto.password()))
-                .nickname(dto.nickname())
-                .email(dto.email())
-                .phone(dto.phone())
-                .status("ACTIVE")
-                .build();
+        User user = userConverter.fromCreateDTO(dto);
+        user.setPassword(passwordEncoder.encode(dto.password()));
         save(user);
-        return UserVO.from(user);
+        return userConverter.toVO(user);
     }
 
     @Override
@@ -51,18 +47,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @CacheEvict(cacheNames = "user", key = "#id")
     public UserVO update(Long id, UserUpdateDTO dto) {
         User user = requireById(id);
-        if (dto.nickname() != null) user.setNickname(dto.nickname());
-        if (dto.email() != null) user.setEmail(dto.email());
-        if (dto.phone() != null) user.setPhone(dto.phone());
-        if (dto.status() != null) user.setStatus(dto.status());
+        userConverter.updateFromDTO(dto, user);
         updateById(user);
-        return UserVO.from(user);
+        return userConverter.toVO(user);
     }
 
     @Override
     @Cacheable(cacheNames = "user", key = "#id", unless = "#result == null")
     public UserVO getVO(Long id) {
-        return UserVO.from(getById(id));
+        return userConverter.toVO(getById(id));
     }
 
     @Override
@@ -75,7 +68,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(StringUtils.hasText(query.status()), User::getStatus, query.status())
                 .orderByDesc(User::getCreatedAt);
         Page<User> page = page(Page.of(query.safeCurrent(), query.safeSize()), wrapper);
-        return PageResult.of(page, UserVO::from);
+        return PageResult.of(page, userConverter::toVO);
     }
 
     @Override

@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8089
   servlet:
     context-path: /api
   # 启用虚拟线程处理 HTTP 请求 (JDK 25)
@@ -20,9 +20,9 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/cxj?currentSchema=public&stringtype=unspecified
+    url: jdbc:postgresql://localhost:5432/ry-vue?currentSchema=public&stringtype=unspecified
     username: postgres
-    password: postgres
+    password: root
     hikari:
       pool-name: HikariPool-cxj
       minimum-idle: 5
@@ -35,7 +35,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password:
+      password: ruoyi123
       database: 0
       timeout: 5000ms
       lettuce:

@@ -2,7 +2,17 @@
 
 Spring Boot 4.1 + JDK 25 + MyBatis-Plus + Redis 8.6.3 + PostgreSQL 18 按业务模块分包脚手架。
 
-## 目录结构
+## 项目结构
+
+```
+cangxj/
+├── frontend/           // 前端（待开发）
+├── backend/            // 后端 Spring Boot 应用
+├── docker-compose.yml  // 全栈编排（app + PostgreSQL + Redis）
+└── README.md
+```
+
+## 后端包结构
 
 ```
 com.cxj
@@ -17,6 +27,7 @@ com.cxj
 │   ├── controller      // 表现层 (UserController)
 │   │   ├── dto         // 入参 Record (UserCreateDTO / UserUpdateDTO / UserQueryDTO)
 │   │   └── vo          // 返回 Record (UserVO)
+│   ├── converter       // MapStruct 对象转换 (UserConverter)
 │   ├── service         // 业务层 (UserService + UserServiceImpl)
 │   ├── entity          // 数据库实体 (User)
 │   └── mapper          // 数据访问 (UserMapper)
@@ -28,6 +39,7 @@ com.cxj
 ├── notification        // 业务模块：通知 (sealed + switch pattern matching)
 │   ├── NotificationChannel     // sealed interface (Email / Sms / Webhook)
 │   └── NotificationDispatcher  // JDK 25 模式匹配分发
+├── generator           // 代码生成器（开发工具，不进入生产包）
 └── Application.java
 ```
 
@@ -42,7 +54,7 @@ com.cxj
 | PostgreSQL      | 18, Hikari 连接池；Flyway 迁移 |
 | Security        | JWT (jjwt 0.13.0)，无状态；Redis 滑动窗口登录限流 |
 | OpenAPI         | springdoc 2.6，全局 Bearer 认证 |
-| 工具            | Hutool 5.8, Lombok |
+| 工具            | Hutool 5.8, Lombok, MapStruct 1.6 |
 
 ## 快速开始
 
@@ -131,7 +143,7 @@ docker run -d --name cxj-app \
 - **DTO/VO 使用 Record**：不可变、天然 `equals/hashCode`、序列化友好。
 - **实体使用 Lombok POJO**：MyBatis-Plus 反射需要可变对象。
 - **统一响应**：`R<T>` 包装业务响应，`PageResult<T>` 分页；异常统一由 `GlobalExceptionHandler` 拦截。
-- **策略模式**：`sealed interface + record + switch pattern matching`（见 `service/strategy/NotificationDispatcher`）。
+- **策略模式**：`sealed interface + record + switch pattern matching`（见 `notification/NotificationDispatcher`）。
 - **虚拟线程**：`spring.threads.virtual.enabled=true` + `@Async("applicationTaskExecutor")`；直接使用可注入 `virtualThreadExecutor`。
 - **缓存**：`@Cacheable` / `@CacheEvict`，前缀 `cxj:cache:`，默认 30m TTL。
 - **审计字段**：`MetaObjectHandler` 自动填充 `createdAt/updatedAt/createdBy/updatedBy`。

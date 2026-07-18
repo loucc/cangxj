@@ -12,7 +12,7 @@ import java.util.Map;
  * 代码生成器（独立 main() 工具，compileOnly 不进入生产包）
  * <p>
  * 用法：在 IDE 中直接运行 main()，修改 TABLES 数组指定要生成的表名。
- * 连接本地 PostgreSQL，读取表结构元数据，生成完整 CRUD 代码到 src/main/java。
+ * 连接本地 PostgreSQL，读取表结构元数据，生成完整 CRUD 代码到 cxj-module-system 模块。
  */
 public class CodeGenerator {
 
@@ -31,7 +31,7 @@ public class CodeGenerator {
 
     public static void main(String[] args) {
         String projectPath = System.getProperty("user.dir");
-        String javaOutputDir = projectPath + "/src/main/java";
+        String javaOutputDir = projectPath + "/cxj-module-system/src/main/java";
 
         for (String table : TABLES) {
             // 从表名派生模块名：sys_order → order, sys_role → role
@@ -165,7 +165,7 @@ public class CodeGenerator {
                 new CustomFile.Builder()
                         .fileName("Mapper.xml")
                         .templatePath(tplDir + "mapper.xml.ftl")
-                        .filePath(System.getProperty("user.dir") + "/src/main/resources/mapper")
+                        .filePath(System.getProperty("user.dir") + "/cxj-server/src/main/resources/mapper")
                         .build()
         );
     }

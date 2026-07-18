@@ -9,3 +9,9 @@ pluginManagement {
 }
 
 rootProject.name = "cxj"
+
+include("cxj-common")
+include("cxj-security")
+include("cxj-module-system")
+include("cxj-server")
+include("cxj-generator")

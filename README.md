@@ -46,7 +46,7 @@ com.cxj
 
 ## 快速开始
 
-1. 修改 `src/main/resources/application.yml`：
+1. 修改 `backend/src/main/resources/application.yml`：
    - `spring.datasource.*` — PostgreSQL 连接
    - `spring.data.redis.*` — Redis 连接
    - `app.security.jwt.secret` — **生产必须替换**，建议使用环境变量
@@ -59,8 +59,9 @@ com.cxj
 3. 首次运行：Flyway 自动执行 `V1__init_sys_user.sql`。
 4. 构建 & 运行：
    ```bash
-   ./mvnw -DskipTests package
-   java -jar target/cxj.jar
+   cd backend
+   ./gradlew bootJar -x test
+   java -jar build/libs/cxj.jar
    ```
 5. 访问：
    - Swagger UI: <http://localhost:8080/api/swagger-ui.html>
@@ -81,8 +82,7 @@ com.cxj
 ### 一键启动
 
 ```bash
-# 1. 准备环境变量
-cp .env.example .env
+# 1. 准备环境变量（手动创建 .env，参考 docker-compose.yml 中的默认值）
 # 生产必须替换 JWT_SECRET / REDIS_PASSWORD 等敏感值
 # openssl rand -base64 48
 
@@ -106,7 +106,7 @@ docker compose down -v       # 同时清空数据
 ### 仅构建镜像
 
 ```bash
-docker build -t cxj:latest .
+docker build -t cxj:latest ./backend
 docker run -d --name cxj-app \
   -p 8080:8080 \
   -e SPRING_PROFILES_ACTIVE=docker \
@@ -118,7 +118,7 @@ docker run -d --name cxj-app \
 
 ### 关键设计
 
-- **多阶段构建**：`maven:3.9-eclipse-temurin-25` 编译 → `eclipse-temurin:25-jre-alpine` 运行，镜像 < 250MB。
+- **多阶段构建**：`gradle:9.6-jdk25` 编译 → `eclipse-temurin:25-jre-alpine` 运行，镜像 < 250MB。
 - **非 root 用户**：容器内以 `app` 用户运行，符合安全基线。
 - **JVM 参数**：`-XX:+UseZGC -XX:MaxRAMPercentage=75.0`，JDK 25 默认使用生成式 ZGC。
 - **健康检查**：容器与 Compose 均通过 `/actuator/health` 探活。

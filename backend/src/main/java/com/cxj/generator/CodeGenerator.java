@@ -17,9 +17,9 @@ import java.util.Map;
 public class CodeGenerator {
 
     // ====== 数据库连接配置（PostgreSQL 18）======
-    private static final String DB_URL = "jdbc:postgresql://localhost:5432/cxj?currentSchema=public&stringtype=unspecified";
+    private static final String DB_URL = "jdbc:postgresql://localhost:5432/ry-vue?currentSchema=public&stringtype=unspecified";
     private static final String DB_USERNAME = "postgres";
-    private static final String DB_PASSWORD = "postgres";
+    private static final String DB_PASSWORD = "root";
 
     // ====== 项目配置 ======
     private static final String BASE_PACKAGE = "com.cxj";
@@ -27,7 +27,7 @@ public class CodeGenerator {
     private static final String TABLE_PREFIX = "sys_";
 
     // ====== 要生成的表名列表（修改此处后运行 main()，默认不覆盖已有文件）======
-    private static final String[] TABLES = {};
+    private static final String[] TABLES = {"user_role"};
 
     public static void main(String[] args) {
         String projectPath = System.getProperty("user.dir");

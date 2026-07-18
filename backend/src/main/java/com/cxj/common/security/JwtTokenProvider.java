@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * JWT 令牌工具：签发、解析、校验
@@ -40,6 +41,7 @@ public class JwtTokenProvider {
     public String generate(String subject, Map<String, Object> claims) {
         Instant now = Instant.now();
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(subject)
                 .issuer(issuer)
                 .claims(claims)
@@ -70,5 +72,15 @@ public class JwtTokenProvider {
 
     public long expirationSeconds() {
         return expiration.toSeconds();
+    }
+
+    public Optional<String> extractJti(String token) {
+        return parse(token).map(Claims::getId);
+    }
+
+    public long getRemainingSeconds(String token) {
+        return parse(token)
+                .map(c -> c.getExpiration().toInstant().getEpochSecond() - Instant.now().getEpochSecond())
+                .orElse(0L);
     }
 }

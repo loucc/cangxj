@@ -2,7 +2,9 @@ package com.cxj.auth.service;
 
 import com.cxj.common.enums.ResultCode;
 import com.cxj.common.exception.BusinessException;
+import com.cxj.common.security.ConcurrentSessionService;
 import com.cxj.common.security.JwtTokenProvider;
+import com.cxj.common.security.RefreshTokenService;
 import com.cxj.auth.controller.dto.LoginDTO;
 import com.cxj.user.entity.User;
 import com.cxj.auth.controller.vo.LoginVO;
@@ -17,8 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.cxj.user.service.UserService;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -38,6 +39,12 @@ class AuthServiceTest {
 
     @Mock
     private UserConverter userConverter;
+
+    @Mock
+    private ConcurrentSessionService concurrentSessionService;
+
+    @Mock
+    private RefreshTokenService refreshTokenService;
 
     @InjectMocks
     private AuthService authService;
@@ -64,6 +71,8 @@ class AuthServiceTest {
         when(passwordEncoder.matches("correct-password", "$2a$10$encoded-password")).thenReturn(true);
         when(tokenProvider.generate(eq("alice"), anyMap())).thenReturn("mock-jwt-token");
         when(tokenProvider.expirationSeconds()).thenReturn(7200L);
+        when(tokenProvider.extractJti("mock-jwt-token")).thenReturn(Optional.of("mock-jti"));
+        when(refreshTokenService.createRefreshToken(1L)).thenReturn("mock-refresh-token");
 
         UserVO userVO = new UserVO(1L, "alice", "Alice", "alice@example.com",
                 "13800138000", "ACTIVE", null, null);
@@ -73,6 +82,7 @@ class AuthServiceTest {
 
         assertNotNull(result);
         assertEquals("mock-jwt-token", result.accessToken());
+        assertEquals("mock-refresh-token", result.refreshToken());
         assertEquals("Bearer", result.tokenType());
         assertEquals(7200L, result.expiresIn());
         assertEquals("alice", result.user().username());
@@ -111,6 +121,46 @@ class AuthServiceTest {
         when(passwordEncoder.matches("password", "$2a$10$encoded")).thenReturn(true);
 
         BusinessException ex = assertThrows(BusinessException.class, () -> authService.login(dto));
+        assertEquals(ResultCode.FORBIDDEN.getCode(), ex.getCode());
+    }
+
+    @Test
+    void refresh_shouldSucceedWithValidRefreshToken() {
+        when(refreshTokenService.validateAndConsume("valid-refresh")).thenReturn(Optional.of(1L));
+        when(userService.getById(1L)).thenReturn(activeUser);
+        when(tokenProvider.generate(eq("alice"), anyMap())).thenReturn("new-jwt-token");
+        when(tokenProvider.expirationSeconds()).thenReturn(7200L);
+        when(tokenProvider.extractJti("new-jwt-token")).thenReturn(Optional.of("new-jti"));
+        when(refreshTokenService.createRefreshToken(1L)).thenReturn("new-refresh-token");
+
+        UserVO userVO = new UserVO(1L, "alice", "Alice", "alice@example.com",
+                "13800138000", "ACTIVE", null, null);
+        when(userConverter.toVO(activeUser)).thenReturn(userVO);
+
+        LoginVO result = authService.refresh("valid-refresh");
+
+        assertNotNull(result);
+        assertEquals("new-jwt-token", result.accessToken());
+        assertEquals("new-refresh-token", result.refreshToken());
+    }
+
+    @Test
+    void refresh_shouldThrowWhenRefreshTokenExpired() {
+        when(refreshTokenService.validateAndConsume("expired-refresh")).thenReturn(Optional.empty());
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> authService.refresh("expired-refresh"));
+        assertEquals(ResultCode.TOKEN_EXPIRED.getCode(), ex.getCode());
+    }
+
+    @Test
+    void refresh_shouldThrowWhenUserDisabled() {
+        User disabledUser = User.builder()
+                .id(2L).username("disabled").status("DISABLED").build();
+
+        when(refreshTokenService.validateAndConsume("valid-refresh")).thenReturn(Optional.of(2L));
+        when(userService.getById(2L)).thenReturn(disabledUser);
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> authService.refresh("valid-refresh"));
         assertEquals(ResultCode.FORBIDDEN.getCode(), ex.getCode());
     }
 }

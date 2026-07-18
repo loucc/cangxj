@@ -3,9 +3,15 @@ package com.cxj.auth.controller;
 import com.cxj.common.enums.ResultCode;
 import com.cxj.common.exception.BusinessException;
 import com.cxj.common.response.R;
+import com.cxj.common.security.ConcurrentSessionService;
+import com.cxj.common.security.JwtTokenProvider;
 import com.cxj.common.security.RateLimitService;
+import com.cxj.common.security.RefreshTokenService;
+import com.cxj.common.security.TokenBlacklistService;
+import com.cxj.common.utils.SecurityUtils;
 import com.cxj.auth.controller.dto.LoginDTO;
 import com.cxj.user.controller.dto.UserCreateDTO;
+import com.cxj.auth.controller.dto.RefreshDTO;
 import com.cxj.auth.controller.vo.LoginVO;
 import com.cxj.user.controller.vo.UserVO;
 import com.cxj.auth.service.AuthService;
@@ -20,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "认证", description = "登录 / 注册")
+@Tag(name = "认证", description = "登录 / 注册 / 登出 / 刷新")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -29,6 +35,10 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
     private final RateLimitService rateLimitService;
+    private final TokenBlacklistService blacklistService;
+    private final ConcurrentSessionService concurrentSessionService;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtTokenProvider tokenProvider;
 
     @Operation(summary = "账号密码登录")
     @PostMapping("/login")
@@ -56,6 +66,37 @@ public class AuthController {
         return R.ok(userService.create(dto));
     }
 
+    @Operation(summary = "刷新 access_token")
+    @PostMapping("/refresh")
+    public R<LoginVO> refresh(@Valid @RequestBody RefreshDTO dto) {
+        return R.ok(authService.refresh(dto.refreshToken()));
+    }
+
+    @Operation(summary = "退出登录")
+    @PostMapping("/logout")
+    public R<Void> logout(HttpServletRequest request,
+                          @RequestBody(required = false) RefreshDTO dto) {
+        // 从请求头获取当前 access_token 并加入黑名单
+        String token = extractToken(request);
+        if (token != null) {
+            blacklistService.blacklist(token);
+
+            // 移除并发会话记录
+            SecurityUtils.currentUserId().ifPresent(userId ->
+                    tokenProvider.extractJti(token).ifPresent(jti ->
+                            concurrentSessionService.removeToken(userId, jti)
+                    )
+            );
+        }
+
+        // 撤销 refresh_token
+        if (dto != null && dto.refreshToken() != null) {
+            refreshTokenService.revoke(dto.refreshToken());
+        }
+
+        return R.ok();
+    }
+
     private String extractClientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isEmpty()) {
@@ -66,5 +107,13 @@ public class AuthController {
             return realIp;
         }
         return request.getRemoteAddr();
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
+        }
+        return null;
     }
 }

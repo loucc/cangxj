@@ -2,10 +2,13 @@ package com.cxj.auth.controller;
 
 import com.cxj.common.enums.ResultCode;
 import com.cxj.common.exception.BusinessException;
+import com.cxj.common.security.ConcurrentSessionService;
 import com.cxj.common.security.JwtAuthenticationFilter;
 import com.cxj.common.security.JwtTokenProvider;
 import com.cxj.common.security.RateLimitService;
+import com.cxj.common.security.RefreshTokenService;
 import com.cxj.common.security.SecurityResponseHandlers;
+import com.cxj.common.security.TokenBlacklistService;
 import com.cxj.auth.controller.dto.LoginDTO;
 import com.cxj.user.controller.dto.UserCreateDTO;
 import com.cxj.auth.controller.vo.LoginVO;
@@ -60,13 +63,22 @@ class AuthControllerTest {
     private SecurityResponseHandlers securityResponseHandlers;
 
     @MockitoBean
+    private TokenBlacklistService tokenBlacklistService;
+
+    @MockitoBean
+    private ConcurrentSessionService concurrentSessionService;
+
+    @MockitoBean
+    private RefreshTokenService refreshTokenService;
+
+    @MockitoBean
     private UserMapper userMapper;
 
     @Test
     void login_shouldReturnToken_onValidCredentials() throws Exception {
         UserVO userVO = new UserVO(1L, "alice", "Alice", "alice@test.com",
                 "13800138000", "ACTIVE", LocalDateTime.now(), LocalDateTime.now());
-        LoginVO loginVO = LoginVO.of("mock-token", 7200L, userVO);
+        LoginVO loginVO = LoginVO.of("mock-token", "mock-refresh-token", 7200L, userVO);
         when(authService.login(any(LoginDTO.class))).thenReturn(loginVO);
         when(rateLimitService.isRateLimited(anyString())).thenReturn(false);
 

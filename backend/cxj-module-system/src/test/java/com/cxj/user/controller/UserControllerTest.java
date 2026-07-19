@@ -11,7 +11,7 @@ import com.cxj.user.controller.dto.UserUpdateDTO;
 import com.cxj.user.mapper.UserMapper;
 import com.cxj.user.service.UserService;
 import com.cxj.user.controller.vo.UserVO;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;

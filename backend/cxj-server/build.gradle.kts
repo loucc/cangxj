@@ -1,6 +1,5 @@
-// cxj-server: 启动层 — Spring Boot 启动类、全局配置、配置文件
 plugins {
-    id("org.springframework.boot")
+    id("cxj.spring-boot-conventions")
 }
 
 dependencies {
@@ -8,43 +7,38 @@ dependencies {
     implementation(project(":cxj-security"))  // SecurityConfig / MybatisPlusConfig 直接引用
 
     // Spring Boot Web
-    implementation("org.springframework.boot:spring-boot-starter-web") {
+    implementation(libs.spring.boot.starter.web) {
         exclude(group = "commons-logging", module = "commons-logging")
         exclude(group = "org.apache.logging.log4j", module = "log4j-to-slf4j")
     }
 
     // Spring Security (SecurityConfig)
-    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation(libs.spring.boot.starter.security)
 
     // Actuator
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation(libs.spring.boot.starter.actuator)
 
     // Redis + Cache (RedisConfig)
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.springframework.boot:spring-boot-starter-cache")
-    implementation("org.apache.commons:commons-pool2")
+    implementation(libs.spring.boot.starter.data.redis)
+    implementation(libs.spring.boot.starter.cache)
+    implementation(libs.commons.pool2)
 
     // MyBatis-Plus (MybatisPlusConfig)
-    implementation("com.baomidou:mybatis-plus-spring-boot4-starter:3.5.17")
-    implementation("com.baomidou:mybatis-plus-jsqlparser:3.5.17")
+    implementation(libs.mybatis.plus.spring.boot4.starter)
+    implementation(libs.mybatis.plus.jsqlparser)
 
     // Flyway
-    implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql")
+    implementation(libs.bundles.flyway)
 
     // PostgreSQL Driver
-    runtimeOnly("org.postgresql:postgresql:42.7.13")
+    runtimeOnly(libs.postgresql)
 
     // OpenAPI (OpenApiConfig)
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+    implementation(libs.springdoc.openapi)
 
     // Configuration Processor
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    annotationProcessor(libs.spring.boot.configuration.processor)
 
     // Test
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-}
-
-tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    archiveFileName.set("cxj.jar")
+    testImplementation(libs.spring.boot.starter.test)
 }

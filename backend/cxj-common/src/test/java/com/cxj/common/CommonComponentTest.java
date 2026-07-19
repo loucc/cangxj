@@ -45,9 +45,9 @@ class CommonComponentTest {
     }
 
     @Test
-    void webMvcConfig_shouldCreateObjectMapper() {
+    void webMvcConfig_shouldCreateCustomizer() {
         var config = new com.cxj.config.WebMvcConfig();
-        var mapper = config.objectMapper();
-        assertNotNull(mapper);
+        var customizer = config.customDateTimeFormat();
+        assertNotNull(customizer);
     }
 }

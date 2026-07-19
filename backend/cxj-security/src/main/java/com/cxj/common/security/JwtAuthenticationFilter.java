@@ -1,6 +1,6 @@
 package com.cxj.common.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.cxj.common.enums.ResultCode;
 import com.cxj.common.response.R;
 import io.jsonwebtoken.Claims;

@@ -1,22 +1,23 @@
-// cxj-security: 安全框架层 — Spring Security、JWT、权限上下文
+plugins {
+    id("cxj.java-library-conventions")
+}
+
 dependencies {
-    implementation(project(":cxj-common"))
+    api(project(":cxj-common"))
 
     // Spring Security
-    implementation("org.springframework.boot:spring-boot-starter-security")
+    api(libs.spring.boot.starter.security)
 
     // Spring Web (OncePerRequestFilter, ObjectMapper)
-    implementation("org.springframework.boot:spring-boot-starter-web")
-
-    // Jackson (ObjectMapper for JSON error responses)
-    implementation("com.fasterxml.jackson.core:jackson-databind")
+    api(libs.spring.boot.starter.web)
 
     // Redis (TokenBlacklist, RefreshToken, ConcurrentSession, RateLimit)
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.apache.commons:commons-pool2")
+    api(libs.spring.boot.starter.data.redis)
+
+    implementation(libs.commons.pool2)
 
     // JWT
-    implementation("io.jsonwebtoken:jjwt-api:0.13.0")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
+    implementation(libs.jjwt.api)
+    runtimeOnly(libs.jjwt.impl)
+    runtimeOnly(libs.jjwt.jackson)
 }

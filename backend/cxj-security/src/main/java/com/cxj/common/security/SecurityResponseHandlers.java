@@ -2,7 +2,7 @@ package com.cxj.common.security;
 
 import com.cxj.common.enums.ResultCode;
 import com.cxj.common.response.R;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

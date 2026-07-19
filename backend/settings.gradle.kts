@@ -8,7 +8,16 @@ pluginManagement {
     }
 }
 
+dependencyResolutionManagement {
+    repositories {
+        maven { url = uri("https://maven.aliyun.com/repository/public/") }
+        mavenCentral()
+    }
+}
+
 rootProject.name = "cxj"
+
+includeBuild("build-logic")
 
 include("cxj-common")
 include("cxj-security")

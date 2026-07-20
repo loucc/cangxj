@@ -11,12 +11,11 @@ RUN chmod +x gradlew \
 
 # 复制各模块源码并打包
 COPY cxj-common ./cxj-common
-COPY cxj-security ./cxj-security
-COPY cxj-module-system ./cxj-module-system
-COPY cxj-server ./cxj-server
+COPY cxj-modules ./cxj-modules
+COPY cxj-admin ./cxj-admin
 COPY cxj-generator ./cxj-generator
-RUN ./gradlew :cxj-server:bootJar -x test \
-    && mv cxj-server/build/libs/cxj.jar /build/app.jar
+RUN ./gradlew :cxj-admin:bootJar -x test \
+    && mv cxj-admin/build/libs/cxj.jar /build/app.jar
 
 # ============ Stage 2: Runtime ============
 FROM eclipse-temurin:25-jre-alpine

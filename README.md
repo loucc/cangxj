@@ -17,35 +17,69 @@ cangxj/
 └── README.md
 ```
 
-## 后端包结构
+## 后端包结构（目标架构）
+
+> 以下为推荐的工程层级规范，🌟 标记为当前尚未实现、后续需要补全的能力。
 
 ```
 com.cxj
-├── config              // 核心全局配置 (MyBatis-Plus / Redis / Security / VirtualThreads / OpenAPI / WebMvc)
-├── common              // 公共组件
-│   ├── enums           // ResultCode 等枚举
-│   ├── exception       // BusinessException / GlobalExceptionHandler
-│   ├── response        // R<T> 与 PageResult<T>
-│   ├── security        // JwtTokenProvider / JwtAuthenticationFilter / SecurityResponseHandlers / RateLimitService
-│   └── utils           // SecurityUtils
-├── user                // 业务模块：用户
-│   ├── controller      // 表现层 (UserController)
-│   │   ├── dto         // 入参 Record (UserCreateDTO / UserUpdateDTO / UserQueryDTO)
-│   │   └── vo          // 返回 Record (UserVO)
-│   ├── converter       // MapStruct 对象转换 (UserConverter)
-│   ├── service         // 业务层 (UserService + UserServiceImpl)
-│   ├── entity          // 数据库实体 (User)
-│   └── mapper          // 数据访问 (UserMapper)
-├── auth                // 业务模块：认证
-│   ├── controller      // 表现层 (AuthController)
-│   │   ├── dto         // 入参 Record (LoginDTO)
-│   │   └── vo          // 返回 Record (LoginVO)
-│   └── service         // 业务层 (AuthService)
-├── notification        // 业务模块：通知 (sealed + switch pattern matching)
-│   ├── NotificationChannel     // sealed interface (Email / Sms / Webhook)
-│   └── NotificationDispatcher  // JDK 25 模式匹配分发
-├── generator           // 代码生成器（开发工具，不进入生产包）
-└── Application.java
+├── common                                 # 通用基础设施
+│   ├── base                               # BaseEntity、BaseService、分页封装
+│   ├── exception                          # 全局异常处理、BizErrorCode 接口
+│   ├── interceptor                        # 拦截器、过滤器
+│   ├── util                               # 通用工具（日期、加密、树、IP 等）
+│   ├── enums                              # 全局通用枚举（YesNo、DeleteFlag）
+│   ├── response                           # 统一返回体 R、分页 VO
+│   ├── security                           # 安全上下文、JWT 工具、权限注解
+│   ├── lock           🌟                  # 分布式锁注解+AOP
+│   ├── cache          🌟                  # 缓存抽象、Key 生成器
+│   ├── idempotent     🌟                  # 幂等性注解+拦截器
+│   ├── log            🌟                  # 操作日志注解+AOP
+│   └── validation     🌟                  # 通用校验器、分组接口
+│
+├── config                                 # 按中间件分包
+│   ├── security                           # Spring Security / Sa-Token 配置
+│   ├── mybatis                            # MyBatis-Plus 分页、自动填充、数据权限拦截器
+│   ├── redis                              # Redis 序列化、连接池
+│   ├── thread                             # 虚拟线程配置、异步线程池
+│   ├── web                                # MVC、跨域、静态资源
+│   ├── openapi                            # SpringDoc/Swagger 分组
+│   ├── scheduling     🌟                  # 定时任务线程池
+│   └── jackson        🌟                  # 序列化配置（时间格式、空值忽略）
+│
+├── modules                                # 业务模块
+│   ├── customer       🌟                  # 客户模块（按以下模板）
+│   ├── supplier       🌟                  # 供应商
+│   ├── product        🌟                  # 商品
+│   ├── order          🌟                  # 订单
+│   ├── finance        🌟                  # 财务
+│   ├── purchase       🌟                  # 采购
+│   └── system         🌟                  # 系统管理（用户、角色、菜单、部门）
+│       └── ...
+│
+└── generator                              # 代码生成器，不参与业务
+```
+
+### 单个业务模块内部结构（以 order 为例）
+
+```
+modules/order
+├── controller
+│   ├── admin                              # 后台接口
+│   └── open                               # 开放接口
+├── model
+│   ├── entity                             # 数据库实体
+│   ├── dto                                # 数据传输对象
+│   ├── vo                                 # 视图对象
+│   └── enums                              # 模块私有枚举（如 OrderStatusEnum）
+├── event              🌟                  # 领域事件定义（OrderCreatedEvent）
+├── listener           🌟                  # 事件监听器（可跨模块）
+├── converter                              # MapStruct 转换接口
+├── mapper                                 # MyBatis-Plus Mapper
+├── service
+│   └── impl
+├── manager                                # 聚合服务 / 防腐层
+└── job                🌟                  # 模块私有的定时任务
 ```
 
 ## 关键技术选型
@@ -87,7 +121,7 @@ com.cxj
    ./gradlew bootJar -x test
    
    # 运行
-   java -jar cxj-server/build/libs/cxj.jar
+   java -jar cxj-admin/build/libs/cxj.jar
    
    # 配置缓存已启用，二次构建更快
    ```

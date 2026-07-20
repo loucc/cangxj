@@ -45,8 +45,8 @@ class CommonComponentTest {
     }
 
     @Test
-    void webMvcConfig_shouldCreateCustomizer() {
-        var config = new com.cxj.config.WebMvcConfig();
+    void jacksonConfig_shouldCreateCustomizer() {
+        var config = new com.cxj.config.jackson.JacksonConfig();
         var customizer = config.customDateTimeFormat();
         assertNotNull(customizer);
     }

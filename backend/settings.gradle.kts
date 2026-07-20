@@ -20,7 +20,6 @@ rootProject.name = "cxj"
 includeBuild("build-logic")
 
 include("cxj-common")
-include("cxj-security")
-include("cxj-module-system")
-include("cxj-server")
+include("cxj-modules")
+include("cxj-admin")
 include("cxj-generator")

@@ -1,0 +1,137 @@
+server:
+  port: 8089
+  servlet:
+    context-path: /api
+  # 启用虚拟线程处理 HTTP 请求 (JDK 25)
+  tomcat:
+    threads:
+      max: 200
+  shutdown: graceful
+
+spring:
+  application:
+    name: cxj
+  profiles:
+    active: dev
+  # 启用 Spring Boot 3.2+ 的虚拟线程支持
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/ry-vue?currentSchema=public&stringtype=unspecified
+    username: postgres
+    password: root
+    hikari:
+      pool-name: HikariPool-cxj
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ruoyi123
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 3000ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30m
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: "cxj:cache:"
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    default-schema: public
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.cxj.modules.system.user.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: assign_id
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 自定义 JWT 配置
+app:
+  security:
+    jwt:
+      # 生产环境必须通过环境变量注入，dev profile 提供默认开发值
+      secret: ${JWT_SECRET:}
+      # 单位：秒；默认 2 小时
+      expiration: 7200
+      issuer: cxj
+      header: Authorization
+      prefix: "Bearer "
+    # 无需鉴权的路径
+    permit-all:
+      - /auth/login
+      - /auth/register
+      - /auth/refresh
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /swagger-ui.html
+      - /actuator/health
+      - /actuator/info
+    # 单用户最大并发登录数，超过后踢掉最早的 token
+    max-sessions-per-user: 3
+    # refresh_token 有效期（秒），默认 7 天
+    refresh-token-ttl: 604800
+  cors:
+    # 允许的域名列表，生产环境通过环境变量或 docker profile 配置
+    allowed-origins: []
+  rate-limit:
+    login:
+      max-attempts: 5
+      window-seconds: 60
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+logging:
+  level:
+    root: INFO
+    com.cxj: DEBUG
+    com.cxj.mapper: DEBUG
+    org.springframework.security: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
